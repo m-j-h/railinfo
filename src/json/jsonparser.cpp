@@ -16,12 +16,17 @@ private:
     std::vector<std::string>    m_context;
     std::string                 m_currentKey;
     IJSONHandler&               m_handler;
+    JSONParser::ObjectVector&   m_objects;
+    JSONParser::Object          m_currentObject;
     
 public:
-    explicit RapidJSONHandler( IJSONHandler& handler )
+    explicit RapidJSONHandler( IJSONHandler& handler,
+                               JSONParser::ObjectVector& objects )
     : m_context(),
       m_currentKey(),
-      m_handler( handler )
+      m_handler( handler ),
+      m_objects( objects ),
+      m_currentObject()
     {}
     
     bool Null() 
@@ -127,9 +132,10 @@ JSONParser::~JSONParser()
 {}
 
 bool JSONParser::Parse( const std::string& json,
-                        IJSONHandler&      handler  )
+                        IJSONHandler&      handler,
+                        ObjectVector&      objects )
 {
-    RapidJSONHandler rapidJSONHandler( handler );
+    RapidJSONHandler rapidJSONHandler( handler, objects );
     Reader           reader;
     StringStream     ss(json.c_str());
     

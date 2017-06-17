@@ -66,7 +66,8 @@ int main(int argc, char** argv)
     
     JSONParser parser;
     Logger logger;
-    parser.Parse( json, logger );
+    JSONParser::ObjectVector objects;
+    parser.Parse( json, logger, objects );
     
     return 0;
 }
