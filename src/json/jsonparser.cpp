@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "ijsonhandler.h"
-
 #include "rapidjson/reader.h"
 
 using namespace rapidjson;
@@ -15,16 +13,13 @@ class RapidJSONHandler
 private:
     std::vector<std::string>    m_context;
     std::string                 m_currentKey;
-    IJSONHandler&               m_handler;
     JSONParser::ObjectVector&   m_objects;
     JSONParser::Object          m_currentObject;
     
 public:
-    explicit RapidJSONHandler( IJSONHandler& handler,
-                               JSONParser::ObjectVector& objects )
+    explicit RapidJSONHandler( JSONParser::ObjectVector& objects )
     : m_context(),
       m_currentKey(),
-      m_handler( handler ),
       m_objects( objects ),
       m_currentObject()
     {}
@@ -43,14 +38,14 @@ public:
     
     bool Int(int i)
     {
-        m_handler.Int( m_currentKey, i );
+        m_currentObject[m_currentKey] = std::to_string(i);
         m_currentKey.clear();
         return true;
     }
     
     bool Uint(unsigned u)
     {
-        m_handler.UInt( m_currentKey, u );
+        m_currentObject[m_currentKey] = std::to_string(u);
         m_currentKey.clear();
         return true;
     }
@@ -77,7 +72,6 @@ public:
     {
         const std::string value( str );
         
-        m_handler.String( m_currentKey, value );
         m_currentKey.clear();
         return true;
     }
@@ -85,8 +79,7 @@ public:
     bool String(const char* str, SizeType length, bool copy)
     {
         const std::string value( str );
-        
-        m_handler.String( m_currentKey, value );
+
         m_currentKey.clear();
         return true;
     }
@@ -94,7 +87,6 @@ public:
     bool StartObject() 
     {
         m_context.push_back( m_currentKey );
-        m_handler.StartObject( m_currentKey );
         m_currentKey.clear();
         return true;
     }
@@ -108,19 +100,17 @@ public:
     bool EndObject(SizeType memberCount)
     {
         m_context.pop_back();
-        m_handler.EndObject();
+        m_objects.push_back( std::move( m_currentObject ) );
         return true;     
     }
     
     bool StartArray()
     {
-        m_handler.StartArray();
         return true;
     }
     
     bool EndArray(SizeType elementCount)
     {
-        m_handler.EndArray();
         return true; 
     }
 };
@@ -132,10 +122,9 @@ JSONParser::~JSONParser()
 {}
 
 bool JSONParser::Parse( const std::string& json,
-                        IJSONHandler&      handler,
                         ObjectVector&      objects )
 {
-    RapidJSONHandler rapidJSONHandler( handler, objects );
+    RapidJSONHandler rapidJSONHandler( objects );
     Reader           reader;
     StringStream     ss(json.c_str());
     

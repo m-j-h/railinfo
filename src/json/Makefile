@@ -1,22 +1,17 @@
 
 CXXOPTS = -std=c++14
 
-SOURCES = \
-jsonmain.cpp \
-jsonparser.cpp
-
 TESTSOURCES = \
 jsonparser.cpp \
 jsonparsertests.cpp
 
 INCLUDE = -I/home/mark/3rdparty/rapidjson/include
 
-all: $(SOURCES)
-	$(CXX) $(CXXOPTS) $(INCLUDE) -o json_test $(SOURCES)
+all: test
 
 test: $(TESTSOURCES)
-	$(CXX) $(CXXOPTS) $(INCLUDE) -o json_parser_tests $(TESTSOURCES) 
+	$(CXX) $(CXXOPTS) $(INCLUDE) -o json_parser_tests $(TESTSOURCES)
+	./json_parser_tests
 
 clean:
-	rm -f json_test
 	rm -f json_parser_tests

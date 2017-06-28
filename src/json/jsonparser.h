@@ -5,8 +5,6 @@
 #include <map>
 #include <vector>
 
-class IJSONHandler;
-
 class JSONParser
 {
 public:
@@ -17,8 +15,8 @@ public:
     ~JSONParser();
     
     bool Parse( const std::string& json,
-                IJSONHandler&      handler,
                 ObjectVector&      objects );
+
 };
 
 #endif // JSONPARSER_H
