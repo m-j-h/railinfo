@@ -6,8 +6,8 @@
 #include <fstream>
 #include <sstream>
 
-StompHandler::StompHandler( bool log )
-: m_log( log ),
+StompHandler::StompHandler( const std::string& dataDirectory )
+: m_dataDirectory( dataDirectory ),
   m_fileId( 0 )
 {}
 
@@ -21,28 +21,16 @@ void StompHandler::OnConnected(StompClient& client)
 
 void StompHandler::OnMessage( std::istream& message )
 {
-    if( m_log )
-    {
-        std::cout << "Logging to file..." << std::endl;
+    std::cout << "Logging to file..." << std::endl;
 
-        std::stringstream filename;
-        filename << "msg_" << ++m_fileId << ".json";
-        std::ofstream ofs( filename.str() );
-        
-        std::string line;
-        while( std::getline( message, line ) )
-        {
-            ofs << line << std::endl;
-        }
-    }
-    else
-    {    
-        std::string line;
-        while( std::getline( message, line ) )
-        {
-            std::cout << line << std::endl;
-        }
-        std::cout << "----" << std::endl;
+    std::stringstream filename;
+    filename << m_dataDirectory << "/" << "msg_" << ++m_fileId << ".json";
+    std::ofstream ofs( filename.str() );
+    
+    std::string line;
+    while( std::getline( message, line ) )
+    {
+        ofs << line << std::endl;
     }
 }
 

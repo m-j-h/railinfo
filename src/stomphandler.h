@@ -2,12 +2,13 @@
 #ifndef STOMPHANDLER_H
 #define STOMPHANDLER_H
 
+#include <string>
 #include "istomphandler.h"
 
 class StompHandler : public IStompHandler
 {
 public:
-    StompHandler( bool log = false );
+    StompHandler( const std::string& dataDirectory );
     virtual ~StompHandler();
     
     virtual void OnConnected(StompClient& client);
@@ -15,6 +16,7 @@ public:
     virtual void OnTrace( const std::string& traceDetails );
     
 private:
+    std::string m_dataDirectory;
     bool m_log;
     int  m_fileId;
 };

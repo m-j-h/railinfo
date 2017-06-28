@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     {
         if (argc != 2)
         {
-            std::cerr << "Usage: client <host>" << std::endl;
+            std::cerr << "Usage: client <config-file>" << std::endl;
             return EXIT_FAILURE;
         }
         
@@ -21,8 +21,9 @@ int main(int argc, char* argv[])
         const auto port     = static_cast<unsigned int>(std::stoi(config["port"]));
         const auto username = config["username"];
         const auto password = config["password"];
+        const auto dataDirectory = config["data-dir"];
         
-        StompHandler sh(true);
+        StompHandler sh( dataDirectory );
         StompClient sc( hostname,
                         port,
                         username,
