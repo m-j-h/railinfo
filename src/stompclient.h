@@ -5,6 +5,8 @@
 #include <boost/asio.hpp>
 
 #include "istomphandler.h"
+#include "message.h"
+#include "logger.h"
 
 class StompClient
 {
@@ -31,8 +33,7 @@ private:
     void SendFrame( const std::string& frame );
     void ReceiveFrame();
     void ProcessFrame(boost::asio::streambuf& buffer, std::size_t length);
-    FrameType ReadFirstLine( std::istream& is );
-    void ReadMessageContent( std::istream& is );
+    size_t GetContentLength() const;
     
     const std::string   m_server;
     const unsigned int  m_port;
@@ -42,6 +43,9 @@ private:
     IStompHandler&                  m_handler;
     boost::asio::io_service         m_ioService;
     boost::asio::ip::tcp::socket    m_socket;
+    std::string                     m_currentMessage;
+    Message                         m_message;
+    Logger                          m_logger;
 };
 
 #endif // STOMP_H

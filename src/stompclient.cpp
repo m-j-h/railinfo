@@ -1,5 +1,6 @@
 
 #include "stompclient.h"
+#include <iostream>
 
 using boost::asio::ip::tcp;
 
@@ -14,13 +15,18 @@ StompClient::StompClient(   const std::string& server,
     m_password( password ),
     m_handler( handler ),
     m_ioService(),
-    m_socket(m_ioService)
+    m_socket(m_ioService),
+    m_currentMessage(),
+    m_message(),
+    m_logger()
 {
     // We will use synchronous resolution for now
     tcp::resolver           resolver(m_ioService);
     tcp::resolver::query    query( m_server, std::to_string(m_port) );
     tcp::resolver::iterator iter = resolver.resolve(query);
     
+    m_message.SetLogger( &m_logger );
+
     Connect( iter );
     
     // For now we run our service loop here
@@ -35,7 +41,7 @@ void StompClient::Subscribe( const std::string& topic )
     std::ostringstream os;
     os  << "SUBSCRIBE\r\n"
         << "id: 0\r\n"
-        << "destination: /topic/" << topic << "\r\n"
+        << "destination: /queue/" << topic << "\r\n"
         << "ack: auto\r\n"
         << "\r\n"
         << '\0';
@@ -110,37 +116,41 @@ void StompClient::ReceiveFrame()
 void StompClient::ProcessFrame(boost::asio::streambuf& buffer, std::size_t length)
 {
     std::istream is(&buffer);
+     
+    // NEW CODE START 
+    std::cout << "Frame size: " << length << std::endl;
+    std::istreambuf_iterator<char> eos;
+    std::string frame( std::istreambuf_iterator<char>( is ), eos);
+    std::cout << "Read from frame: " << frame.length() << std::endl;
+    //m_currentMessage += frame;
+    m_message.AppendData( frame );
 
-    const auto frameType = ReadFirstLine( is );
-    switch( frameType )
+    if( m_currentMessage.find( "CONNECTED" ) == 0 )
     {
-        case FrameType::Connected:
-            m_handler.OnConnected( *this );
-            break;
-            
-        case FrameType::Message:
-            ReadMessageContent( is );
-            break;
+        m_handler.OnConnected( *this );
     }
-}
-
-StompClient::FrameType StompClient::ReadFirstLine( std::istream& is )
-{
-    FrameType type = FrameType::Unknown;
     
-    std::string line;
-    if( std::getline( is, line ) )
+    std::string result;
+    if( m_message.GetCompleteMessage( &result ) )
     {
-        if( line == "CONNECTED" ) return FrameType::Connected;
-        if( line == "MESSAGE" ) return FrameType::Message;
+        m_handler.OnMessage( result );
     }
-    return type;
+    //m_currentMessage.clear();
 }
 
-void StompClient::ReadMessageContent( std::istream& is )
-{    
-    std::string line;    
-    while( std::getline( is, line ) && !line.empty() )
-    {}
-    m_handler.OnMessage( is );
+size_t StompClient::GetContentLength() const
+{
+    const std::string header { "content-length:" };
+    const auto pos = m_currentMessage.find( header );
+    if( pos == std::string::npos )
+    {
+        return 0;
+    }
+
+    const auto tagEndPos = pos + header.length();
+    const auto valueEnd = m_currentMessage.find_first_of("\r\n", tagEndPos);
+    const std::string s( m_currentMessage, tagEndPos, valueEnd - tagEndPos );
+    std::cout << "S = " << s << std::endl;
+    return std::stoi(s);
 }
+

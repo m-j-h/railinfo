@@ -5,15 +5,23 @@ SOURCES = \
 main.cpp \
 stompclient.cpp \
 stomphandler.cpp \
-config.cpp
+config.cpp \
+message.cpp \
+logger.cpp
+
+TESTSOURCES = \
+messagetests.cpp
 
 LIBS = -lboost_system -pthread -L/usr/lib/x86_64-linux-gnu 
 
 all: $(SOURCES)
-	make -C json all 
 	$(CXX) $(CXXOPTS) $(JSON_INCLUDE) -o railinfo $(SOURCES) $(LIBS)
+
+test: $(TESTSOURCES)
+	$(CXX) $(CXXOPTS) $(INCLUDE) -o message_tests $(TESTSOURCES) message.cpp
+	./message_tests
 
 clean:
 	make -C json clean
-	rm -f railinfo
+	rm -f railinfo message_tests
 

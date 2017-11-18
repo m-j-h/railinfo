@@ -21,9 +21,11 @@ int main(int argc, char* argv[])
         const auto port     = static_cast<unsigned int>(std::stoi(config["port"]));
         const auto username = config["username"];
         const auto password = config["password"];
+        const auto queue    = config["queue"];
         const auto dataDirectory = config["data-dir"];
-        
-        StompHandler sh( dataDirectory );
+ 
+        Logger logger;       
+        StompHandler sh( dataDirectory, queue );
         StompClient sc( hostname,
                         port,
                         username,

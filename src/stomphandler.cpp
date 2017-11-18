@@ -6,8 +6,9 @@
 #include <fstream>
 #include <sstream>
 
-StompHandler::StompHandler( const std::string& dataDirectory )
+StompHandler::StompHandler( const std::string& dataDirectory, const std::string& queue )
 : m_dataDirectory( dataDirectory ),
+  m_queue( queue ),
   m_fileId( 0 )
 {}
 
@@ -16,7 +17,7 @@ StompHandler::~StompHandler()
 
 void StompHandler::OnConnected(StompClient& client)
 {
-    client.Subscribe("TRAIN_MVT_EF_TOC");
+    client.Subscribe( m_queue );
 }
 
 void StompHandler::OnMessage( std::istream& message )
@@ -31,6 +32,22 @@ void StompHandler::OnMessage( std::istream& message )
     while( std::getline( message, line ) )
     {
         ofs << line << std::endl;
+    }
+}
+
+void StompHandler::OnMessage( const std::string& message )
+{
+    std::cout << "Logging to file..." << std::endl;
+
+    std::stringstream filename;
+    filename << m_dataDirectory << "/" << "msg_" << ++m_fileId << ".json";
+    std::ofstream ofs( filename.str() );
+    
+    ofs << message << std::endl;
+
+    if( m_fileId > 4 )
+    {
+        exit(1);
     }
 }
 
