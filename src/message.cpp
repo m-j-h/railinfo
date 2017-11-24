@@ -48,7 +48,7 @@ bool Message::GetCompleteMessage( std::string* message )
             return false;
         }
 
-        const auto messageLength = bodyStartPos + contentLength + 1;
+        const auto messageLength = bodyStartPos + contentLength + 2;
         *message = m_content.substr( 0, messageLength );
         m_content.erase( 0, messageLength );
         Log("Extracted message based on ContentHeader");
