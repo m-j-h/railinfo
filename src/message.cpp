@@ -18,60 +18,48 @@ void Message::AppendData( const std::string& data )
 bool Message::GetCompleteMessage( std::string* message )
 {
     Log("++GetCompleteMessage");
-    if( m_bodyStart == std::string::npos )
+
+    const auto nulCharPos = m_content.find('\0');
+    if( nulCharPos == std::string::npos )
     {
-        Log("Finding start of body");
-        // Find start of body
-        const std::string headerEndMarker { "\r\n\r\n" };
-        const auto headerEndPos = m_content.find( headerEndMarker );
-        if( headerEndPos == std::string::npos )
+        Log("No NUL char found - incomplete message");
+        return false;
+    }
+
+    const std::string headerEndMarker { "\n\n" };
+    const auto headerEndPos = m_content.find( headerEndMarker );
+    if( headerEndPos == std::string::npos )
+    {
+        Log("Got message with no body");
+        *message = m_content.substr( 0, nulCharPos );
+        m_content.clear();
+        return true;
+    }
+    const auto bodyStartPos = headerEndPos + headerEndMarker.length();
+
+    size_t contentLength = 0;
+    if( HasContentLengthHeader( &contentLength ) )
+    {
+        // The NUL might not be the end of the message
+        const auto currentContentLength = m_content.length() - bodyStartPos;
+        if( currentContentLength < contentLength )
         {
-            // We haven't even seen the start of the bodt yet - so no content
-            Log("Start of body not found");
+            Log("ContentLength header indicates incomplete message");
             return false;
         }
-        Log("Set start of body");
-        m_bodyStart = headerEndPos + headerEndMarker.length();
+
+        const auto messageLength = bodyStartPos + contentLength + 1;
+        *message = m_content.substr( 0, messageLength );
+        m_content.erase( 0, messageLength );
+        Log("Extracted message based on ContentHeader");
+        Log("Excess is '" + m_content + "'");
+        return true;
     }
-
-    if( m_bodyLength == std::string::npos )
-    {
-        // Find out how much data we have
-        size_t contentLength = 0;
-        if( HasContentLengthHeader( &contentLength ) )
-        {
-            Log("Found Content Length header");
-            const auto currentContentLength = m_content.length() - m_bodyStart;
-            if( currentContentLength < contentLength )
-            {
-                // We don't have all the body content yet
-                Log("Have less data than specified by Content Length");
-                return false;
-            }
-            m_bodyLength = contentLength;
-        }
-        else
-        {
-            Log("No Content Length Header found");
-            const auto terminatingNullPos = m_content.find('\0');
-            if( terminatingNullPos == std::string::npos )
-            {
-                // We don't have all the data yet
-                Log("No Nul terminator found - don't have complete message");
-                return false;
-            }
-            Log("Set body length");
-            m_bodyLength = terminatingNullPos - m_bodyStart;
-        }
-    }
-
-    Log("Have complete message - setting result");
-
-    // If we get here then we have the entire body content and know where this is
-    *message = m_content.substr( m_bodyStart, m_bodyLength );
-
-    // Consume the content we're returning leaving any excess
-    m_content = m_content.substr( m_bodyStart + m_bodyLength );
+    
+    // The NUL defines the end of the message
+    *message = m_content.substr( 0, nulCharPos );
+    m_content.clear();
+    Log("Extracted message based on NUL terminator");
     return true;
 }
 

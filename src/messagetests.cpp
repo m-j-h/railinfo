@@ -15,8 +15,8 @@ std::string SampleBody()
 std::string SampleBodyWithEmbeddedNul()
 {
     return
-    "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "\x00"
+    "12345678901234567890123456789012345678901234567890123456789012345678901234567890" + 
+    std::string( 1, '\0') + 
     "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
 }
 
@@ -43,10 +43,9 @@ std::string SampleData(const std::string& body, bool isComplete = true )
         "persistent:true\r\n"
         "timestamp:1510684290656\r\n"
         "\r\n" <<
-        body <<
-        "\x00";
+        body;
 
-    return os.str();    
+    return os.str() + std::string(1, '\0');
 }
 
 BOOST_AUTO_TEST_CASE( CompleteSimpleMessage )
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE( CompleteMessageWithEmbeddedNulWithExtraDataAtEnd )
 BOOST_AUTO_TEST_CASE( IncompleteMessage )
 {
     const bool isComplete = false;
-    Message m;    
+    Message m;
     m.AppendData( SampleData( SampleBody(), false ) );
 
     std::string result;

@@ -98,6 +98,7 @@ void StompClient::ReceiveFrame()
 {
     std::shared_ptr<boost::asio::streambuf> buffer( new boost::asio::streambuf() );
     
+    m_handler.OnTrace("Waiting for frame");
     boost::asio::async_read_until(
         m_socket,
         *buffer,
@@ -117,25 +118,24 @@ void StompClient::ProcessFrame(boost::asio::streambuf& buffer, std::size_t lengt
 {
     std::istream is(&buffer);
      
-    // NEW CODE START 
     std::cout << "Frame size: " << length << std::endl;
     std::istreambuf_iterator<char> eos;
     std::string frame( std::istreambuf_iterator<char>( is ), eos);
     std::cout << "Read from frame: " << frame.length() << std::endl;
-    //m_currentMessage += frame;
+    
+    m_handler.OnFrame( frame );
     m_message.AppendData( frame );
 
-    if( m_currentMessage.find( "CONNECTED" ) == 0 )
-    {
-        m_handler.OnConnected( *this );
-    }
-    
     std::string result;
     if( m_message.GetCompleteMessage( &result ) )
     {
+        if( result.find( "CONNECTED" ) == 0 )
+        {
+            m_handler.OnConnected( *this );
+        }
+
         m_handler.OnMessage( result );
     }
-    //m_currentMessage.clear();
 }
 
 size_t StompClient::GetContentLength() const

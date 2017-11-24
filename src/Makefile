@@ -10,7 +10,8 @@ message.cpp \
 logger.cpp
 
 TESTSOURCES = \
-messagetests.cpp
+messagetests.cpp \
+logger.cpp
 
 LIBS = -lboost_system -pthread -L/usr/lib/x86_64-linux-gnu 
 
