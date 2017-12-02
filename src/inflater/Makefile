@@ -1,24 +1,45 @@
-
+# Library
 LIBNAME = inflater
-TESTPROGNAME = $(LIBNAME)_tests
-LOCAL_LIB_PATH = $(shell pwd)
-CXXOPTS = -std=c++14
+LIBVERSION = 1
+LIBSUBVERSION = 0
+LIBLINKNAME = lib$(LIBNAME).so
+LIBSONAME = $(LIBLINKNAME).$(LIBVERSION)
+LIBFULLNAME = $(LIBSONAME).$(LIBSUBVERSION)
+LOCALLIBDIR = lib
+FULL_LIB_DIR = $(shell pwd)/lib
+LIBFULLSPEC = $(LOCALLIBDIR)/$(LIBFULLNAME)
 
+# Tests 
+TESTBINDIR = bin
+TESTPROGNAME = $(LIBNAME)_tests
+TESTPROGOPTS = -Wl,-rpath,$(FULL_LIB_DIR)
+
+# Tools
+CXXOPTS = -std=c++14
+MKDIR = mkdir
+CP = cp
+RM = rm
+LN = ln
+
+# Sources
 SOURCES = \
 inflater.cpp
 
 TESTSOURCES = \
 inflatertests.cpp
 
-#LIBS = -lboost_system -pthread -L/usr/lib/x86_64-linux-gnu 
-
+# Targets 
 all: $(SOURCES)
-	$(CXX) $(CXXOPTS) -fPIC -shared -o lib$(LIBNAME).so $(SOURCES)
+	$(MKDIR) -p $(LOCALLIBDIR)
+	$(CXX) $(CXXOPTS) -fPIC -shared -o $(LIBFULLSPEC) $(SOURCES) -lz -L/usr/lib/x86_64-linux-gnu
+	cd lib && $(LN) -s -f $(LIBFULLNAME) $(LIBSONAME)
+	cd lib && $(LN) -s -f $(LIBFULLNAME) $(LIBLINKNAME)
 
-test: $(TESTSOURCES)
-	$(CXX) $(CXXOPTS) $(INCLUDE) -o $(TESTPROGNAME) $(TESTSOURCES) -L$(LOCAL_LIB_PATH) -l$(LIBNAME)
-	export LD_LIBRARY_PATH=$(LOCAL_LIB_PATH),$(LD_LIBRARY_PATH) && ./$(TESTPROGNAME)
+test: $(TESTSOURCES) $(LIBFULLSPEC)
+	$(MKDIR) -p $(TESTBINDIR) 
+	$(CXX) $(CXXOPTS) $(TESTPROGOPTS) -o $(TESTBINDIR)/$(TESTPROGNAME) $(TESTSOURCES) -L$(FULL_LIB_DIR) -l$(LIBNAME)
+	./$(TESTBINDIR)/$(TESTPROGNAME)
 
 clean:
-	rm -f lib$(LIBNAME).so $(TESTPROGNAME)
+	$(RM) -f $(TESTPROGNAME) $(LOCALLIBDIR)/* $(TESTBINDIR)/*
 
