@@ -12,7 +12,10 @@ StompHandler::StompHandler( const std::string& dataDirectory, const std::string&
 : m_dataDirectory( dataDirectory ),
   m_queue( queue ),
   m_fileId( 0 ),
-  m_frameFile(m_dataDirectory + "/frames_log.txt") 
+  m_frameFile(m_dataDirectory + "/frames_log.txt"),
+  m_dumpMessages( false ),
+  m_dumpFrames( false ),
+  m_dumpTrace( false )
 {}
 
 StompHandler::~StompHandler()
@@ -23,30 +26,18 @@ void StompHandler::OnConnected(StompClient& client)
     client.Subscribe( m_queue );
 }
 
-void StompHandler::OnMessage( std::istream& message )
-{
-    std::cout << "Logging to file..." << std::endl;
-
-    std::stringstream filename;
-    filename << m_dataDirectory << "/" << "msg_" << ++m_fileId << ".json";
-    std::ofstream ofs( filename.str() );
-    
-    std::string line;
-    while( std::getline( message, line ) )
-    {
-        ofs << line << std::endl;
-    }
-}
-
 void StompHandler::OnMessage( const std::string& message )
 {
-    std::cout << "Logging to file..." << std::endl;
+    if( m_dumpMessages )
+    {
+        std::cout << "Logging to file..." << std::endl;
 
-    std::stringstream filename;
-    filename << m_dataDirectory << "/" << "msg_" << ++m_fileId << ".txt";
-    std::ofstream ofs( filename.str() );
+        std::stringstream filename;
+        filename << m_dataDirectory << "/" << "msg_" << ++m_fileId << ".txt";
+        std::ofstream ofs( filename.str() );
     
-    ofs << message << std::endl;
+        ofs << message << std::endl;
+    }
 
     if( message.find("MESSAGE") == 0 )
     {
@@ -64,22 +55,49 @@ void StompHandler::OnMessage( const std::string& message )
         }
     }
 
-    if( m_fileId > 4 )
+    if( m_dumpMessages )
     {
-        m_frameFile.close();
-        exit(1);
+        if( m_fileId > 4 )
+        {
+            m_frameFile.close();
+            exit(1);
+        }
     }
 }
 
 void StompHandler::OnTrace( const std::string& traceDetails )
 {
+    if( !m_dumpTrace )
+    {
+        return;
+    }
+
     std::cout << "LOG: " << traceDetails << std::endl;
 }
 
 void StompHandler::OnFrame( const std::string& frame )
 {
-    std::cout << "Logging frame to file..." << std::endl;
+    if( !m_dumpFrames )
+    {
+        return;
+    }
 
+    std::cout << "Logging frame to file..." << std::endl;
     m_frameFile << frame;
+}
+
+void StompHandler::EnableMessageDump( bool enable )
+{
+    m_dumpMessages = enable;
+}
+
+void StompHandler::EnableFrameDump( bool enable )
+{
+    m_dumpFrames = enable;
+}
+
+void StompHandler::EnableTrace( bool enable )
+{
+    m_dumpTrace = enable;
 }
 
