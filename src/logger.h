@@ -10,7 +10,11 @@ public:
     Logger();
     virtual ~Logger();
 
-    virtual void Log( size_t tag, const std::string& message );
+    virtual void Log( LogTag tag, const std::string& message ) const;
+    virtual bool IsEnabled( LogTag tag ) const;
+
+private:
+    bool IsTagEnabled( LogTag tag ) const;
 };
 
 #endif // LOGGER_H

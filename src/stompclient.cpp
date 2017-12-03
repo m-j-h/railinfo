@@ -8,7 +8,8 @@ StompClient::StompClient(   const std::string& server,
                             unsigned int       port,
                             const std::string& username,
                             const std::string& password,
-                            IStompHandler&     handler )
+                            IStompHandler&     handler,
+                            const ILogger&     logger  )
 :   m_server( server ),
     m_port( port ),
     m_username( username ),
@@ -17,15 +18,13 @@ StompClient::StompClient(   const std::string& server,
     m_ioService(),
     m_socket(m_ioService),
     m_currentMessage(),
-    m_message(),
-    m_logger()
+    m_message( logger ),
+    m_logger( logger )
 {
     // We will use synchronous resolution for now
     tcp::resolver           resolver(m_ioService);
     tcp::resolver::query    query( m_server, std::to_string(m_port) );
     tcp::resolver::iterator iter = resolver.resolve(query);
-    
-    //m_message.SetLogger( &m_logger );
 
     Connect( iter );
     
@@ -118,10 +117,8 @@ void StompClient::ProcessFrame(boost::asio::streambuf& buffer, std::size_t lengt
 {
     std::istream is(&buffer);
      
-    std::cout << "Frame size: " << length << std::endl;
     std::istreambuf_iterator<char> eos;
     std::string frame( std::istreambuf_iterator<char>( is ), eos);
-    std::cout << "Read from frame: " << frame.length() << std::endl;
     
     m_handler.OnFrame( frame );
     m_message.AppendData( frame );
@@ -136,21 +133,5 @@ void StompClient::ProcessFrame(boost::asio::streambuf& buffer, std::size_t lengt
 
         m_handler.OnMessage( result );
     }
-}
-
-size_t StompClient::GetContentLength() const
-{
-    const std::string header { "content-length:" };
-    const auto pos = m_currentMessage.find( header );
-    if( pos == std::string::npos )
-    {
-        return 0;
-    }
-
-    const auto tagEndPos = pos + header.length();
-    const auto valueEnd = m_currentMessage.find_first_of("\r\n", tagEndPos);
-    const std::string s( m_currentMessage, tagEndPos, valueEnd - tagEndPos );
-    std::cout << "S = " << s << std::endl;
-    return std::stoi(s);
 }
 

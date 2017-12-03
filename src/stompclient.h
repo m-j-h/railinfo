@@ -8,6 +8,8 @@
 #include "message.h"
 #include "logger.h"
 
+class ILogger;
+
 class StompClient
 {
 public:
@@ -15,7 +17,8 @@ public:
                  unsigned int       port,
                  const std::string& username,
                  const std::string& password,
-                 IStompHandler&     handler );
+                 IStompHandler&     handler,
+                 const ILogger&     logger );
     ~StompClient();
     
     void Subscribe( const std::string& topic );
@@ -33,7 +36,6 @@ private:
     void SendFrame( const std::string& frame );
     void ReceiveFrame();
     void ProcessFrame(boost::asio::streambuf& buffer, std::size_t length);
-    size_t GetContentLength() const;
     
     const std::string   m_server;
     const unsigned int  m_port;
@@ -45,7 +47,7 @@ private:
     boost::asio::ip::tcp::socket    m_socket;
     std::string                     m_currentMessage;
     Message                         m_message;
-    Logger                          m_logger;
+    const ILogger&                  m_logger;
 };
 
 #endif // STOMP_H

@@ -25,12 +25,13 @@ int main(int argc, char* argv[])
         const auto dataDirectory = config["data-dir"];
  
         Logger logger;
-        StompHandler sh( dataDirectory, queue );
+        StompHandler sh( queue, dataDirectory, logger );
         StompClient sc( hostname,
                         port,
                         username,
                         password,
-                        sh );
+                        sh,
+                        logger );
     }
     catch (std::exception& e)
     {

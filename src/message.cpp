@@ -1,11 +1,11 @@
 
 #include "message.h"
 
-Message::Message()
+Message::Message( const ILogger& logger ) 
 : m_content(),
   m_bodyStart(std::string::npos),
   m_bodyLength(std::string::npos),
-  m_logger( nullptr )
+  m_logger( logger )
 {}
 
 Message::~Message()
@@ -69,11 +69,6 @@ std::string Message::Content() const
     return m_content;
 }
 
-void Message::SetLogger( ILogger* logger )
-{
-    m_logger = logger;
-}
-
 bool Message::HasContentLengthHeader( size_t* cl ) const
 {
     const std::string headerTag { "content-length:" };
@@ -97,9 +92,6 @@ bool Message::HasContentLengthHeader( size_t* cl ) const
 
 void Message::Log( const std::string& message )
 {
-    if( m_logger != nullptr )
-    {
-        m_logger->Log( 0, message );
-    }
+    m_logger.Log( LogTag::StompMessage, message );
 }
 
