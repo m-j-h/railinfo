@@ -16,13 +16,12 @@ logger.cpp
 LIBS = -lboost_system -pthread -L/usr/lib/x86_64-linux-gnu 
 
 all: $(SOURCES)
-	$(CXX) $(CXXOPTS) $(JSON_INCLUDE) -o railinfo $(SOURCES) $(LIBS)
+	$(CXX) $(CXXOPTS) -o railinfo $(SOURCES) $(LIBS)
 
 test: $(TESTSOURCES)
 	$(CXX) $(CXXOPTS) $(INCLUDE) -o message_tests $(TESTSOURCES) message.cpp
 	./message_tests
 
 clean:
-	make -C json clean
 	rm -f railinfo message_tests
 
