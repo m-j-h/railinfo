@@ -1,10 +1,12 @@
 
 #include "stomphandler.h"
-#include "stompclient.h"
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include "stompclient.h"
+#include "inflater/inflater.h"
 
 StompHandler::StompHandler( const std::string& dataDirectory, const std::string& queue )
 : m_dataDirectory( dataDirectory ),
@@ -45,6 +47,22 @@ void StompHandler::OnMessage( const std::string& message )
     std::ofstream ofs( filename.str() );
     
     ofs << message << std::endl;
+
+    if( message.find("MESSAGE") == 0 )
+    {
+        std::cout << "Got MESSAGE" << std::endl;
+        const std::string headerEndMarker { "\n\n" };
+        const auto headerEndPosition = message.find( headerEndMarker );
+        if( headerEndPosition != std::string::npos )
+        {
+            const auto bodyStartPosition = headerEndPosition + headerEndMarker.length();
+            const std::string body = message.substr( bodyStartPosition );
+
+            Inflater inflater;
+            const auto result = inflater.Process(body);
+            std::cout << result << std::endl;
+        }
+    }
 
     if( m_fileId > 4 )
     {

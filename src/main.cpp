@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
         const auto queue    = config["queue"];
         const auto dataDirectory = config["data-dir"];
  
-        Logger logger;       
+        Logger logger;
         StompHandler sh( dataDirectory, queue );
         StompClient sc( hostname,
                         port,

@@ -25,7 +25,7 @@ StompClient::StompClient(   const std::string& server,
     tcp::resolver::query    query( m_server, std::to_string(m_port) );
     tcp::resolver::iterator iter = resolver.resolve(query);
     
-    m_message.SetLogger( &m_logger );
+    //m_message.SetLogger( &m_logger );
 
     Connect( iter );
     

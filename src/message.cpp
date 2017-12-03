@@ -4,7 +4,8 @@
 Message::Message()
 : m_content(),
   m_bodyStart(std::string::npos),
-  m_bodyLength(std::string::npos)
+  m_bodyLength(std::string::npos),
+  m_logger( nullptr )
 {}
 
 Message::~Message()
